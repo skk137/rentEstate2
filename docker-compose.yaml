@@ -29,8 +29,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .envfile
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
       - SPRING_DATASOURCE_USERNAME=dbuser

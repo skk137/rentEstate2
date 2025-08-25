@@ -1,4 +1,4 @@
 
 
 
-jenkins from localhost 2
+jenkins from localhost after cron expression

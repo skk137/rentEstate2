@@ -20,7 +20,8 @@ pipeline {
 			steps {
 				sh '''
                     echo "Running Maven tests..."
-                    ./mvnw test
+                    chmod 777 mvnw
+					./mvnw test
                 '''
             }
         }

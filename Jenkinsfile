@@ -20,7 +20,7 @@ pipeline {
 			steps {
 				sh '''
                     echo "Running Maven tests..."
-                    sudo ./mvnw test
+                    ./mvnw test
                 '''
             }
         }

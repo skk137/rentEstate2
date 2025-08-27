@@ -5,7 +5,7 @@ pipeline {
 		DOCKER_TOKEN = credentials('docker-push-secret')    // DEBUG
         DOCKER_USER = 'skk137'
         DOCKER_SERVER = 'ghcr.io'
-        DOCKER_PREFIX = 'ghcr.io/skk137/rentEstate2'
+        DOCKER_PREFIX = 'ghcr.io/skk137/rentestate2'
     }
 
     stages {

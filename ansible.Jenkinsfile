@@ -18,7 +18,7 @@ pipeline {
         stage('test connection to deploy env') {
         steps {
             sh '''
-                ansible -i ~/workspace/ansible/hosts.yaml -m ping devops-vm-app,devops-vm-db
+                ansible -i ~/workspace/ansible-job/hosts.yaml -m ping devops-vm-app,devops-vm-db
             '''
             }
         }
@@ -29,8 +29,8 @@ pipeline {
             }
             steps {
                 sh '''
-                    export ANSIBLE_CONFIG=~/workspace/ansible/ansible.cfg
-                    ansible-playbook -i ~/workspace/ansible/hosts.yaml -l devops-vm-db ~/workspace/ansible-job/playbooks/postgres.yaml
+                    export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
+                    ansible-playbook -i ~/workspace/ansible-job/hosts.yaml -l devops-vm-db ~/workspace/ansible-job/playbooks/postgres.yaml
                 '''
             }
         }
@@ -41,8 +41,8 @@ pipeline {
             }
             steps {
                 sh '''
-                    export ANSIBLE_CONFIG=~/workspace/ansible/ansible.cfg
-                    ansible-playbook -i ~/workspace/ansible/hosts.yaml -l devops-vm-app ~/workspace/ansible-job/playbooks/spring.yaml
+                    export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
+                    ansible-playbook -i ~/workspace/ansible-job/hosts.yaml -l devops-vm-app ~/workspace/ansible-job/playbooks/spring.yaml
                 '''
             }
         }

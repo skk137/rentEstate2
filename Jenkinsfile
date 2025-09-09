@@ -16,6 +16,12 @@ pipeline {
             }
         }
 
+        stage('run ansible pipeline') {
+			steps {
+				build job: 'ansible-job'
+        }
+    }
+
         stage('Test') {
 			steps {
 				sh '''
@@ -43,8 +49,6 @@ pipeline {
 				echo "XREIAZETAI NA VALOYME  Ansible repo and config. " //
             }
         }
-
-        // AN THELETE NA SETTAROUME SMTP SERVER GIA MAIL NOTIFICATIONS
 
     }
 

@@ -63,14 +63,27 @@ pipeline {
 stage('Deploy to Kubernetes') {
 			steps {
 				script {
-					echo "Updating Kubernetes deployment with new image: ${env.NEW_IMAGE}"
+					// Ορίζουμε διαδρομή για το virtualenv μέσα στο workspace του Jenkins
+            def venv_dir = "${env.WORKSPACE}/venv-ansible"
 
-            // Τρέχει το Kubernetes update playbook
+            // Αν δεν υπάρχει, το δημιουργούμε με virtualenv (χρησιμοποιούμε --user για να μην χρειάζεται sudo)
             sh """
-                export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
-                ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \
-                    ~/workspace/ansible-job/playbooks/k8s-update-spring-deployment.yaml \
-                    -e new_image=${env.NEW_IMAGE}
+                python3 -m pip install --user virtualenv || true
+                ~/.local/bin/virtualenv ${venv_dir} || true
+                source ${venv_dir}/bin/activate
+                pip install --upgrade pip
+                pip install --upgrade ansible kubernetes openshift
+            """
+
+            // Εκτέλεση του Ansible playbook για Kubernetes deployment
+            def HEAD_COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+            def TAG = "${HEAD_COMMIT}-${env.BUILD_ID}"
+            sh """
+                source ${venv_dir}/bin/activate
+                export ANSIBLE_CONFIG=${env.WORKSPACE}/ansible-job/ansible.cfg
+                ansible-playbook -i ${env.WORKSPACE}/ansible-job/hosts.yaml \
+                    ${env.WORKSPACE}/ansible-job/playbooks/k8s-update-spring-deployment.yaml \
+                    -e new_image=$DOCKER_PREFIX:$TAG
             """
         }
     }

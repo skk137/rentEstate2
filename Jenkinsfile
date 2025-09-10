@@ -34,15 +34,25 @@ pipeline {
 
         stage('Docker build and push') {
 			steps {
-				sh '''
-                    HEAD_COMMIT=$(git rev-parse --short HEAD)
-                    TAG=$HEAD_COMMIT-$BUILD_ID
-                    docker build --rm -t $DOCKER_PREFIX:$TAG -t $DOCKER_PREFIX:latest -f Dockerfile .
-                    echo $DOCKER_TOKEN | docker login $DOCKER_SERVER -u $DOCKER_USER --password-stdin
-                    docker push $DOCKER_PREFIX --all-tags
-                '''
-            }
+				script {
+					// Δημιουργία TAG από commit + build ID
+            def HEAD_COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+            def TAG = "${HEAD_COMMIT}-${env.BUILD_ID}"
+
+            // Τρέχει το Ansible playbook
+            sh """
+                export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
+                ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \
+                  ~/workspace/ansible-job/playbooks/docker-spring.yaml \
+                  -e DOCKER_PREFIX=$DOCKER_PREFIX \
+                  -e TAG=$TAG \
+                  -e DOCKER_USER=$DOCKER_USER \
+                  -e DOCKER_TOKEN=$DOCKER_TOKEN \
+                  -e DOCKER_SERVER=$DOCKER_SERVER
+            """
         }
+    }
+}
 
         stage('Deploy to Kubernetes') {
 			steps {

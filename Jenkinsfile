@@ -65,7 +65,7 @@ stage('Deploy to Kubernetes') {
 				script {
 					echo "Updating Kubernetes deployment with new image: ${env.NEW_IMAGE}"
 
-            // Τρέχει το Kubernetes update playbook
+
             sh """
                 export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
                 ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \

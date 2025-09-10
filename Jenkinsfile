@@ -50,21 +50,27 @@ pipeline {
                   -e DOCKER_TOKEN=$DOCKER_TOKEN \
                   -e DOCKER_SERVER=$DOCKER_SERVER
             """
+            // Αποθήκευση image σε environment variable για το επόμενο stage
+            env.NEW_IMAGE = IMAGE
         }
     }
 }
+		echo "Updating Kubernetes deployment with new image: ${IMAGE}"
 
         stage('Deploy to Kubernetes') {
 			steps {
-				sh '''
-            HEAD_COMMIT=$(git rev-parse --short HEAD)
-            TAG=$HEAD_COMMIT-$BUILD_ID
-            export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
-            ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \
-              -e new_image=$DOCKER_PREFIX:$TAG \
-              ~/workspace/ansible-job/playbooks/k8s-update-spring-deployment.yaml
-        '''
-    	}
+				script {
+					echo "Updating Kubernetes deployment with new image: ${env.NEW_IMAGE}"
+
+            // Τρέχει το Kubernetes update playbook
+            sh """
+                export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
+                ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \
+                    ~/workspace/ansible-job/playbooks/k8s-update-spring-deployment.yaml \
+                    -e new_image=${env.NEW_IMAGE}
+            """
+        }
+    }
         }
 
     }

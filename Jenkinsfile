@@ -46,8 +46,15 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
 			steps {
-				echo "XREIAZETAI NA VALOYME  Ansible repo and config. " //
-            }
+				sh '''
+            HEAD_COMMIT=$(git rev-parse --short HEAD)
+            TAG=$HEAD_COMMIT-$BUILD_ID
+            export ANSIBLE_CONFIG=~/workspace/ansible-job/ansible.cfg
+            ansible-playbook -i ~/workspace/ansible-job/hosts.yaml \
+              -e new_image=$DOCKER_PREFIX:$TAG \
+              ~/workspace/ansible-job/playbooks/k8s-update-spring-deployment.yaml
+        '''
+    	}
         }
 
     }

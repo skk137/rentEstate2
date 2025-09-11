@@ -1,0 +1,13 @@
+# --- Database ---
+POSTGRES_USER=dbuser
+POSTGRES_PASSWORD=db12345
+POSTGRES_DB=mydb
+
+# --- Spring Boot datasource ---
+SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
+SPRING_DATASOURCE_USERNAME=dbuser
+SPRING_DATASOURCE_PASSWORD=db12345
+
+# --- Spring Boot app ---
+SERVER_PORT=8080
+

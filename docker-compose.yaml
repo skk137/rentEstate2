@@ -33,8 +33,8 @@ services:
         SPRING_DATASOURCE_PASSWORD: db12345
         SPRING_MAIL_HOST: smtp.gmail.com
         SPRING_MAIL_PORT: 587
-        SPRING_MAIL_USERNAME: rentestate.app1@gmail.com
-        SPRING_MAIL_PASSWORD: hnbz njrd eprc yixx
+        SPRING_MAIL_USERNAME: rentestate09@gmail.com
+        SPRING_MAIL_PASSWORD: gzxa ihrd thng gdav
         SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
         SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
 

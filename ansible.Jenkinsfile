@@ -14,7 +14,7 @@ pipeline {
                 build job: 'ansible-job'
             }
         }
-
+         // Test connection to target servers
         stage('test connection to deploy env') {
         steps {
             sh '''
@@ -22,7 +22,7 @@ pipeline {
             '''
             }
         }
-
+        // Install PostgreSQL on DB server
         stage('Install postgres') {
              when {
                 expression { return params.INSTALL_POSTGRES }
@@ -35,6 +35,7 @@ pipeline {
             }
         }
 
+         // Install Spring Boot app on app server
         stage('install springboot') {
              when {
                 expression { return params.INSTALL_SPRING }

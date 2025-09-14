@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:16
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=db12345
@@ -27,8 +27,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .envfile
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
       - SPRING_DATASOURCE_USERNAME=dbuser

@@ -2,6 +2,7 @@ package gr.hua.dit.rentEstate.controllers;
 
 import gr.hua.dit.rentEstate.entities.Estate;
 import gr.hua.dit.rentEstate.entities.User;
+import gr.hua.dit.rentEstate.service.EmailService;
 import gr.hua.dit.rentEstate.service.EstateService;
 import gr.hua.dit.rentEstate.service.UserService;
 import org.springframework.security.access.annotation.Secured;
@@ -23,12 +24,13 @@ import java.security.Principal;
 public class AdminController {
     private UserService userService;
     private EstateService estateService;
+    private EmailService emailService;
 
 
-
-    public AdminController(UserService userService,EstateService estateService) {
+    public AdminController(UserService userService, EstateService estateService, EmailService emailService) {
         this.userService = userService;
         this.estateService = estateService;
+        this.emailService = emailService;  //
     }
 
     //Home admin layout
@@ -52,8 +54,26 @@ public class AdminController {
                 user.setVerified(true);  //  Set user to be verified
                 user.setPassword(userPassword); // Set password to avoid encryption bug
                 userService.saveUser(user); //Save user
-            }
 
+                String htmlContent = """
+                            <html>
+                            <body style="font-family: Arial, sans-serif;">
+                                <h2 style="color:#2c3e50;">Ο λογαριασμός σου στο <span style="color:#3498db;">RentEstate</span> εγκρίθηκε ✅</h2>
+                                <p>Γεια σου <b>%s</b>,</p>
+                                <p>Ο διαχειριστής ενέκρινε τον λογαριασμό σου. Τώρα μπορείς να χρησιμοποιήσεις πλήρως την πλατφόρμα!</p>
+                                <br>
+                                <p style="color:gray; font-size: 0.9em;">Μην απαντάς σε αυτό το email.</p>
+                            </body>
+                            </html>
+                        """.formatted(user.getUsername());
+
+                emailService.sendHtmlEmail(
+                        user.getEmail(),
+                        "✔️ Έγκριση λογαριασμού RentEstate",
+                        htmlContent
+
+                );
+            }
             model.addAttribute("users", userService.getUsers());
             return "redirect:/users";
         }
@@ -70,6 +90,7 @@ public class AdminController {
     public String ApproveEstate(@PathVariable("id") Integer EstateId, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String role = authentication.getAuthorities().toString();
+
         if (role.contains("ROLE_ADMIN")) {
             Estate estate = estateService.getEstate(EstateId);
 
@@ -78,6 +99,33 @@ public class AdminController {
             if (estate != null && !estate.isApproved()) {
                 estate.setApproved(true);  // Update isApproved to be true
                 estateService.saveEstate(estate);
+                // Από owner μέσω του Estate.getOwner().getUsername()
+                if (estate.getOwner() != null) {
+                    String ownerUsername = estate.getOwner().getUsername();
+                    User ownerUser = userService.getUserByUsername(ownerUsername);
+
+                    if (ownerUser != null) {
+
+                        String estateTitle = estate.getCityName() + ", " + estate.getStreetName() + " " + estate.getStreetNumber();
+
+                        String html = """
+                            <html>
+                            <body style="font-family: Arial, sans-serif;">
+                                <h2 style="color:#2c3e50;">Το ακίνητό σας εγκρίθηκε </h2>
+                                <p>Το ακίνητο <b>%s</b> εγκρίθηκε και είναι πλέον ορατό στην πλατφόρμα.</p>
+                                <br>
+                                <p style="color:gray; font-size: 0.9em;">Μην απαντάτε σε αυτό το email.</p>
+                            </body>
+                            </html>
+                        """.formatted(estateTitle);
+
+                        emailService.sendHtmlEmail(
+                                ownerUser.getEmail(),
+                                "Έγκριση Ακινήτου στο RentEstate",
+                                html
+                        );
+                    }
+                }
             }
 
             model.addAttribute("estates", estateService.getEstates());

@@ -5,13 +5,16 @@ import gr.hua.dit.rentEstate.service.EstateService;
 import gr.hua.dit.rentEstate.service.RentService;
 import gr.hua.dit.rentEstate.service.TenantService;
 import gr.hua.dit.rentEstate.service.UserService;
+import gr.hua.dit.rentEstate.service.EmailService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Controller
 @RequestMapping("rent")
@@ -22,13 +25,15 @@ public class RentController {
     private final RentService rentService;
     private final TenantService tenantService;
     private final UserService userService;
+    private final EmailService emailService;
 
     // Constructor to initialize services
-    public RentController(EstateService estateService, RentService rentService, TenantService tenantService, UserService userService) {
+    public RentController(EstateService estateService, RentService rentService, TenantService tenantService, UserService userService, EmailService emailService) {
         this.estateService = estateService;
         this.rentService = rentService;
         this.tenantService = tenantService;
         this.userService = userService;
+        this.emailService = emailService;
     }
 
     // Rent request form
@@ -82,6 +87,26 @@ public class RentController {
         tenantService.saveTenant(tenant); // Save tenant changes
         rentService.approveRent(rentId);  // Approve the rent request
 
+        // Email στον ενοικιαστή
+        User tenantUser = userService.getUserByUsername(tenantUsername);
+        if (tenantUser != null) {
+            String html = """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color:#2c3e50;">Έγκριση Αίτησης Ενοικίασης </h2>
+                    <p>Γεια σου <b>%s</b>,</p>
+                    <p>Η αίτησή σου για το ακίνητο <b>%s</b> εγκρίθηκε από τον ιδιοκτήτη.</p>
+                    <p>Μπορείς πλέον να δεις τα στοιχεία στο προφίλ σου.</p>
+                    <br>
+                    <p style="color:gray; font-size: 0.9em;">Μην απαντάς σε αυτό το email.</p>
+                </body>
+                </html>
+            """.formatted(tenantUser.getUsername(), estate.getStreetName() + " " + estate.getStreetNumber());
+
+
+            emailService.sendHtmlEmail(tenantUser.getEmail(), " Έγκριση Αίτησης Ενοικίασης", html);
+        }
+
         return "redirect:/rent/rent?estateId=" + estateId + "&ownerId=" + ownerId; // Redirect to the rent list
     }
 
@@ -89,6 +114,29 @@ public class RentController {
     @PostMapping("/reject")
     public String rejectRent(@RequestParam("rentId") Long rentId, @RequestParam("ownerId") Long ownerId, @RequestParam("estateId") Long estateId) {
         rentService.rejectRent(rentId); // Reject the rent request
+        Rent rent = rentService.getRentById(rentId);
+
+        // Email στον ενοικιαστή
+        User tenantUser = userService.getUserByUsername(rent.getTenantUsername());
+        if (tenantUser != null) {
+            String html = """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color:#2c3e50;">Απόρριψη Αίτησης Ενοικίασης </h2>
+                    <p>Γεια σου <b>%s</b>,</p>
+                    <p>Δυστυχώς, η αίτησή σου για το ακίνητο απορρίφθηκε από τον ιδιοκτήτη.</p>
+                    <p>Μπορείς να υποβάλεις νέα αίτηση σε διαφορετικό ακίνητο.</p>
+                    <br>
+                    <p style="color:gray; font-size: 0.9em;">Μην απαντάς σε αυτό το email.</p>
+                </body>
+                </html>
+            """.formatted(tenantUser.getUsername());
+
+
+            emailService.sendHtmlEmail(tenantUser.getEmail(), " Απόρριψη Αίτησης Ενοικίασης", html);
+        }
+
+
         return "redirect:/rent/rent?estateId=" + estateId + "&ownerId=" + ownerId; // Redirect to the rent list
     }
 
@@ -119,6 +167,26 @@ public class RentController {
         rent.setEstate(estate); // Link the rent request to the estate
         rent.setTenantUsername(loggedInUsername); // Set the tenant's username
         rentService.createRent(rent); // Save the rent request
+
+        // Email στον ιδιοκτήτη
+        User ownerUser = userService.getUserByUsername(estate.getOwnerName());
+        if (ownerUser != null) {
+            String html = """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color:#2c3e50;">Νέα Αίτηση Ενοικίασης </h2>
+                    <p>Αγαπητέ <b>%s</b>,</p>
+                    <p>Ο χρήστης <b>%s</b> υπέβαλε αίτηση για το ακίνητο σου.</p>
+                    <p>Μπορείς να την δεις και να την διαχειριστείς στην πλατφόρμα.</p>
+                    <br>
+                    <p style="color:gray; font-size: 0.9em;">Μην απαντάς σε αυτό το email.</p>
+                </body>
+                </html>
+            """.formatted(ownerUser.getUsername(), loggedInUsername);
+
+
+            emailService.sendHtmlEmail(ownerUser.getEmail(), " Νέα Αίτηση Ενοικίασης", html);
+        }
 
         model.addAttribute("message", "Your rent request has been submitted successfully.");
         return "estate/success";

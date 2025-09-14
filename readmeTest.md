@@ -2,4 +2,4 @@
 
 
 jenkins from localhost after cron expression
-jenkins from localhost after WEB HOOK
+jenkins from azure VM after WEB HOOK
